@@ -1,10 +1,12 @@
 const { readNotes,writeNotes} = require('../services/notes.services');
 
-const getNotes = (req,res) => {
-    readNotes((err,data)=> {
-        if(err) return res.status(500).send('Error finding notes');
-        else return res.json(data);
-    });
+const getNotes = async (req,res) => {
+        try {
+            const data = await readNotes()
+            res.json(data);
+        } catch {
+            res.status(500).send('Error finding notes');
+        }
 }
 const createNote = (req,res) => {
     const newNote = req.body; 

@@ -1,15 +1,34 @@
-const { readNotes, writeNotes } = require('../services/notes.services');
 
-const getNotes = async (req, res) => {
+const {
+    createNote,
+    updateNote,
+    deleteNote,
+    getOneNote,
+    getAllNotes
+} = require('../services/notes.services');
+const getANote = async (req, res, next) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+        return res.status(400).send('Invalid ID');
+    }
     try {
-        const notes = await readNotes();           
+        const note = await getOneNote(id);      
+        if(note == null) return res.status(404).send("Error 404 Not found");       
+        return res.json(note);                   
+    } catch (err) {
+        next(err);
+    }
+};
+const getNotes = async (req, res, next) => {    
+    try {
+        const notes = await getAllNotes();           
         return res.json(notes);                   
     } catch (err) {
-        return res.status(500).send('Error finding notes');
+        next(err);
     }
 };
 
-const createNote = async (req, res) => {
+const create_Note = async (req, res, next) => {
     const { title, content } = req.body;
     if (
         typeof title !== 'string' ||
@@ -20,45 +39,29 @@ const createNote = async (req, res) => {
         return res.status(400).send("You didn't fill all fields");
     }
     try {
-        const notes = await readNotes();           
-        const lastId = notes.length
-            ? notes[notes.length - 1].id
-            : 0;
-        const newNote = {
-            id: lastId + 1,
-            title,
-            content,
-            createdAt: Date.now()
-        };
-        notes.push(newNote);
-        await writeNotes(notes);                   
-        return res.status(201).json(newNote);   
+        const num = await createNote(title,content);  
+        res.status(201).send({"id" : num});  
     } catch (err) {
-        return res.status(500).send('Error posting the note');
+        next(err);
     }
 };
 
-const deleteNote = async (req, res) => {
+const delNote = async (req, res, next) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) {
         return res.status(400).send('Invalid ID');
     }
     try {
-        const notes = await readNotes();           
-        const index = notes.findIndex(n => n.id === id);
-        if (index === -1) {
-            return res.status(404).send('Resource Not Found');
-        }
-        notes.splice(index, 1);
-        await writeNotes(notes);                
-        return res.status(200).send('Note is deleted');
+        const affectedRows = await deleteNote(id);
+        if(affectedRows !== 0) res.status(204).send("Note deleted successfully");
+        else res.status(404).send("404 Note Not Found");
     } catch (err) {
-        return res.status(500).send('Error deleting note');
+        next(err);
     }
 };
 
 
-const updateNote = async (req, res) => {
+const update_Note = async (req, res, next) => {
     const id = Number(req.params.id);
     const { title, content } = req.body;
     if (!Number.isInteger(id)) {
@@ -73,23 +76,17 @@ const updateNote = async (req, res) => {
         return res.status(400).send("You didn't fill all fields");
     }
     try {
-        const notes = await readNotes();           
-        const index = notes.findIndex(n => n.id === id);
-        if (index === -1) {
-            return res.status(404).send('Resource not found');
-        }
-        notes[index].title = title;
-        notes[index].content = content;
-        notes[index].updatedAt = Date.now();
-        await writeNotes(notes);               
-        return res.status(200).json(notes[index]); 
+        const affectedRows = await updateNote(title,content,id);
+        if(affectedRows !== 0) res.status(200).send("Note updated successfully");
+        else res.status(404).send("404 Note Not Found");
     } catch (err) {
-        return res.status(500).send('Error updating the note');
+        next(err);
     }
 };
 module.exports = {
+    getANote,
     getNotes,
-    createNote,
-    deleteNote,
-    updateNote
+    create_Note,
+    delNote,
+    update_Note
 };

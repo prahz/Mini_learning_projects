@@ -53,7 +53,7 @@ const delNote = async (req, res, next) => {
     }
     try {
         const affectedRows = await deleteNote(id);
-        if(affectedRows !== 0) res.status(204).send("Note deleted successfully");
+        if(affectedRows !== 0) res.status(204);
         else res.status(404).send("404 Note Not Found");
     } catch (err) {
         next(err);

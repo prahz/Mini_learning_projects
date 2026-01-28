@@ -20,9 +20,10 @@ async function getOneNote(id) {
     const [row] = await pool.query(sql,[id]);
     return row[0] || null;
 }
-async function getAllNotes() {
-    const sql = "SELECT * FROM notes"
-    const [rows] = await pool.query(sql);
+async function getPages(page, limit ) {
+    const offset = (page - 1) * limit;
+    const sql = "SELECT * FROM notes ORDER BY id LIMIT ? OFFSET ?";
+    const [rows] = await pool.query(sql,[limit, offset]);
     return rows;
 }
 module.exports = {
@@ -30,5 +31,5 @@ module.exports = {
     updateNote,
     deleteNote,
     getOneNote,
-    getAllNotes
+    getPages
 };

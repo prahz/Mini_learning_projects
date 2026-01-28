@@ -4,7 +4,7 @@ const {
     updateNote,
     deleteNote,
     getOneNote,
-    getAllNotes
+    getPages
 } = require('../services/notes.services');
 const getANote = async (req, res, next) => {
     const id = Number(req.params.id);
@@ -19,13 +19,19 @@ const getANote = async (req, res, next) => {
         next(err);
     }
 };
-const getNotes = async (req, res, next) => {    
-    try {
-        const notes = await getAllNotes();           
-        return res.json(notes);                   
-    } catch (err) {
-        next(err);
-    }
+const getNotes = async (req, res, next) => {
+    const page = Number(req.query.page) || 1; 
+    const limit = Number(req.query.limit) || 1;    
+        if(page > 0 && limit > 0) {
+            try {
+                const display = await getPages(page,limit);
+                return res.json(display);
+            } catch(err) {
+                next(err);
+            }
+        } else {
+            return res.status(400).send("Incorrect page or limit ");
+        }
 };
 
 const create_Note = async (req, res, next) => {
